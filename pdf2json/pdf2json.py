@@ -19,52 +19,77 @@ import json
 
 
 def extract_tables(pdf_path):
-    tables = camelot.read_pdf(pdf_path)
+    tables = camelot.read_pdf(pdf_path, strip_text='\n')
     table_list = []
     for table in tables:
         df = table.df
         table_json_obj = json.loads(df.to_json(orient='values'))
-        # json_obj = {
-        #     'page_num': table.page,
-        #     'table_json': table_json_obj
-        # }
-        table_list.append(table_json_obj)
+        json_obj = {
+            'page_num': table.page,
+            'table': table_json_obj
+        }
+        table_list.append(json_obj)
     return table_list
 
 
 def convert_full(pdf_path, txt_path):
     json_path = txt_path.replace('.txt', '.json')
-    cmd = 'java -jar "{}" ExtractText "{}" "{}"'
-    c = cmd.format(pdfbox, pdf_path, txt_path)
-    os.system(c)
+    txt_path_tmp = txt_path.replace('.txt', '{}.txt')
+    #　按页parse
+    cmd = 'java -jar "{}" ExtractText -startPage {} -endPage {} "{}" "{}"'
     output_json = {
         'paragraphs': [],
         'tables': []
     }
-    try:
-        tables = extract_tables(pdf_path)
-        output_json['tables'] = tables
-        delimiter = " \n"
-        with open(txt_path, "r") as paragraphs_file:
-            all_content = paragraphs_file.read() #reading all the content in one step
-            #using the string methods we split it
-            paragraphs = all_content.split(delimiter)
-            for paragraph in paragraphs:
-                print('=================')
-                print(paragraph)
-                if paragraph == '':
-                    continue
-                output_json['paragraphs'].append(paragraph)
-        
-        print(output_json)
-        with open(json_path, "w") as f:
-            json.dump(output_json,f)
+    page_num = 1
+    while True:
+        txt_path = txt_path_tmp.format(page_num)
+        c = cmd.format(pdfbox,page_num,page_num, pdf_path, txt_path)
+        print('************')
+        print(c)
+        os.system(c)
+        try:
+            tables = extract_tables(pdf_path)
+            output_json['tables'] = tables
+            delimiter = " \n"
+            with open(txt_path, "r") as paragraphs_file:
+                all_content = paragraphs_file.read() #reading all the content in one step
+                #using the string methods we split it
+                print(all_content)
+                if all_content == '':
+                    print('end of file')
+                    break
+                paragraphs = all_content.split(delimiter)
+                print(paragraphs)
+                for paragraph in paragraphs:
+                    print('=================')
+                    print(paragraph)
+                    # paragraph = ''.join(paragraph.split('\n'))
+                    para_len = len(output_json['paragraphs'])
+                    # 忽略header
+                    if para_len > 0 and output_json['paragraphs'][0]['content'] == paragraph:
+                        continue
+                    # 拼接段落
+                    if para_len > 0 and len(output_json['paragraphs'][-1]['content']) > 0 and output_json['paragraphs'][-1]['content'][-1] == '\n':
+                        output_json['paragraphs'][-1]['content'] = output_json['paragraphs'][-1]['content'] + paragraph
+                    else:                   
+                        output_json['paragraphs'].append({
+                            'content': paragraph,
+                            'page_num': page_num
+                        })
+        except Exception as e:
+            print(e)
+        finally:
+            # cmd = 'rm {}'.format(txt_path)
+            # os.system(cmd)
+            page_num+=1
+    for paragraph in output_json['paragraphs']:
+        paragraph['content'] = ''.join(paragraph['content'].split('\n'))
+    print(output_json)
+    with open(json_path, "w") as f:
+        json.dump(output_json,f)
+    print('json savedsaved')
 
-    except:
-        cmd = 'rm {}'.format(txt_path)
-        os.system(cmd)
-    cmd = 'rm {}'.format(txt_path)
-    os.system(cmd)
 
 def listpdf(root, sub_path=[]):
     ret = []
