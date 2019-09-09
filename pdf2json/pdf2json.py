@@ -16,6 +16,7 @@ pdfbox = os.path.join(pdfbox, 'pdfbox-app-2.0.4.jar')
 
 import camelot
 import json
+import time
 
 
 def extract_tables(pdf_path):
@@ -48,6 +49,7 @@ def convert_full(pdf_path, txt_path):
         print('************')
         print(c)
         os.system(c)
+        time.sleep(1)
         try:
             tables = extract_tables(pdf_path)
             output_json['tables'] = tables
