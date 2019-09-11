@@ -12,7 +12,7 @@ import argparse
 from pdf2txtlib import convert_pdf_to_file
 
 pdfbox = os.path.abspath(os.path.dirname(__file__))
-pdfbox = os.path.join(pdfbox, 'pdfbox-app-2.0.4.jar')
+pdfbox = os.path.join(pdfbox, 'pdfbox-app-3.0.0-SNAPSHOT.jar')
 
 import camelot
 import json
@@ -35,33 +35,28 @@ def extract_tables(pdf_path):
 
 def convert_full(pdf_path, txt_path):
     json_path = txt_path.replace('.txt', '.json')
-    txt_path_tmp = txt_path.replace('.txt', '{}.txt')
     #　按页parse
-    cmd = 'java -jar "{}" ExtractText -startPage {} -endPage {} "{}" "{}"'
+    cmd = 'java -jar "{}" ExtractText "{}" "{}"'
     output_json = {
         'paragraphs': [],
         'tables': []
     }
-    page_num = 1
-    while True:
-        txt_path = txt_path_tmp.format(page_num)
-        c = cmd.format(pdfbox,page_num,page_num, pdf_path, txt_path)
-        print('************')
-        print(c)
-        os.system(c)
-        time.sleep(1)
-        try:
-            tables = extract_tables(pdf_path)
-            output_json['tables'] = tables
-            delimiter = " \n"
-            with open(txt_path, "r") as paragraphs_file:
-                all_content = paragraphs_file.read() #reading all the content in one step
-                #using the string methods we split it
-                print(all_content)
-                if all_content == '':
-                    print('end of file')
-                    break
-                paragraphs = all_content.split(delimiter)
+    tables = extract_tables(pdf_path)
+    output_json['tables'] = tables
+    c = cmd.format(pdfbox, pdf_path, txt_path)
+    print(c)
+    time.sleep(1)
+    os.system(c)
+    with open(txt_path, "r") as paragraphs_file:
+        all_content = paragraphs_file.read() #reading all the content in one step
+        #using the string methods we split it
+        print(all_content)
+        pages = all_content.split('<page_start>')
+        page_num = 1
+        for page in pages[1:]:
+            try:
+                delimiter = " \n"
+                paragraphs = page.split(delimiter)
                 print(paragraphs)
                 for paragraph in paragraphs:
                     print('=================')
@@ -74,17 +69,16 @@ def convert_full(pdf_path, txt_path):
                     # 拼接段落
                     if para_len > 0 and len(output_json['paragraphs'][-1]['content']) > 0 and output_json['paragraphs'][-1]['content'][-1] == '\n':
                         output_json['paragraphs'][-1]['content'] = output_json['paragraphs'][-1]['content'] + paragraph
-                    else:                   
+                    elif paragraph != '':
                         output_json['paragraphs'].append({
                             'content': paragraph,
                             'page_num': page_num
                         })
-        except Exception as e:
-            print(e)
-        finally:
-            # cmd = 'rm {}'.format(txt_path)
-            # os.system(cmd)
-            page_num+=1
+            except Exception as e:
+                print(e)
+            finally:
+                page_num += 1
+
     for paragraph in output_json['paragraphs']:
         paragraph['content'] = ''.join(paragraph['content'].split('\n'))
     print(output_json)
