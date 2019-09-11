@@ -36,3 +36,4 @@ def fill_json_data_by_year(year):
         break
 
 if __name__ == "__main__":
+    fill_json_data_by_year(2019)
