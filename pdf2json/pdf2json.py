@@ -17,19 +17,23 @@ pdfbox = os.path.join(pdfbox, 'pdfbox-app-3.0.0-SNAPSHOT.jar')
 import camelot
 import json
 import time
+import traceback
 
 
 def extract_tables(pdf_path):
-    tables = camelot.read_pdf(pdf_path, strip_text='\n')
     table_list = []
-    for table in tables:
-        df = table.df
-        table_json_obj = json.loads(df.to_json(orient='values'))
-        json_obj = {
-            'page_num': table.page,
-            'table': table_json_obj
-        }
-        table_list.append(json_obj)
+    try:
+        tables = camelot.read_pdf(pdf_path, strip_text='\n')
+        for table in tables:
+            df = table.df
+            table_json_obj = json.loads(df.to_json(orient='values'))
+            json_obj = {
+                'page_num': table.page,
+                'table': table_json_obj
+            }
+            table_list.append(json_obj)
+    except:
+        traceback.print_exc()
     return table_list
 
 
@@ -76,8 +80,8 @@ def convert_full(pdf_path, txt_path):
                             'content': paragraph,
                             'page_num': page_num
                         })
-            except Exception as e:
-                print(e)
+            except:
+                traceback.print_exc()
             finally:
                 page_num += 1
 
