@@ -51,8 +51,12 @@ def convert_full(pdf_path, txt_path):
     print(c)
     time.sleep(1)
     os.system(c)
-    while not os.path.exists(txt_path):
+    sleep_count = 0
+    while not os.path.exists(txt_path) and sleep_count < 20:
         time.sleep(1)
+        sleep_count += 1
+    if sleep_count == 20:
+        return
     with open(txt_path, "r") as paragraphs_file:
         all_content = paragraphs_file.read() #reading all the content in one step
         #using the string methods we split it
