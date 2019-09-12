@@ -2,7 +2,8 @@ import json
 from datetime import datetime
 import traceback
 from utils import (
-    server_conn
+    server_conn,
+    upload_announcement_to_es
 )
 
 base_path = '/opt/data/company_announcement_pdf/json/'
@@ -31,7 +32,6 @@ def fill_json(announcement):
                     title
                 )
     json_file_name = '{}{}/{}.json'.format(base_path,publishtime,file_name)
-    flag=False
     try:
         with open(json_file_name) as json_file:
             data = json.load(json_file)
@@ -40,18 +40,28 @@ def fill_json(announcement):
         data['meta'] = meta
         data['martket_type'] = market_type
         data['companycode'] = companycode
+        data['report_type'] = report_type
         with open(json_file_name, 'w') as f:
             json.dump(data, f)
-        flag=True
+        save_es_obj = {
+            'companycode': companycode,
+            'title': title,
+            'url': url,
+            'json_content': data['paragraphs'],
+            'meta': meta,
+            'publisthtime': publishtime,
+            'market_type': market_type,
+            'report_type': report_type
+        }
+        upload_announcement_to_es(save_es_obj)
     except:
         traceback.print_exc()
-    return flag
 
 
 def fill_json_data_by_year(year):
     announcements = get_announcement_info(year)
     for announcement in announcements:
-        flag = fill_json(announcement)
+        fill_json(announcement)
 
 if __name__ == "__main__":
     fill_json_data_by_year(2019)
