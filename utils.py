@@ -32,6 +32,10 @@ server_conn = pgdb.Connection(
 )
 
 def upload_announcement_to_es(data):
+    headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
     base_url = config['es_url']
     url = base_url + '/api/announcement/save'
     print(url)
@@ -39,7 +43,8 @@ def upload_announcement_to_es(data):
     s.mount(base_url, HTTPAdapter(max_retries=10))
     while True:
         try:
-            response = s.post(url=url, timeout=10, data=data)
+            response = s.post(headers=headers, url=url, timeout=10, json=data)
+            print(response.content)
             break
         except:
             traceback.print_exc()

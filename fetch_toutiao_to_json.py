@@ -41,27 +41,33 @@ def fill_json(announcement):
         data['martket_type'] = market_type
         data['companycode'] = companycode
         data['report_type'] = report_type
+        data['publishtime'] = publishtime
         with open(json_file_name, 'w') as f:
             json.dump(data, f)
         save_es_obj = {
             'companycode': companycode,
             'title': title,
             'url': url,
-            'json_content': data['paragraphs'],
+            'content_json': data['paragraphs'],
+            'table_json': data['tables'],
             'meta': meta,
-            'publisthtime': publishtime,
+            'publishtime': publishtime,
             'market_type': market_type,
             'report_type': report_type
         }
+        print('==========')
+        print(save_es_obj)
         upload_announcement_to_es(save_es_obj)
     except:
         traceback.print_exc()
+        return False
+    return True
 
 
 def fill_json_data_by_year(year):
     announcements = get_announcement_info(year)
     for announcement in announcements:
-        fill_json(announcement)
+        res = fill_json(announcement)
 
 if __name__ == "__main__":
     fill_json_data_by_year(2019)
