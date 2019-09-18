@@ -26,12 +26,11 @@ def fill_json(announcement):
     print(publishtime)
     print(title)
     print(meta['secName'])
-    file_name = '[{}][{}][{}]'.format(
-                    publishtime,
-                    meta['secName'],
+    file_name = '{}{}'.format(
+                    companycode,
                     title
                 )
-    json_file_name = '{}{}/{}.json'.format(base_path,publishtime,file_name)
+    json_file_name = '{}{}/{}/{}.json'.format(base_path,publishtime[:4], publishtime[5:],file_name)
     try:
         with open(json_file_name) as json_file:
             data = json.load(json_file)
