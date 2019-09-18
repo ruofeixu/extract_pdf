@@ -3,9 +3,9 @@ echo "source: $1"
 echo "year: $2"
 
 s=$1
-s=/opt/data/company_announcement_pdf/report/
+s=/opt/data01/company_announcement_pdf/report/
 dest=$2
-dest=/opt/data/company_announcement_pdf/json/
+dest=/opt/data01/company_announcement_pdf/json/
 y=$3
 y=2019
 

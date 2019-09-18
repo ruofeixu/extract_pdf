@@ -6,7 +6,7 @@ from utils import (
     upload_announcement_to_es
 )
 
-base_path = '/opt/data/company_announcement_pdf/json/'
+base_path = '/opt/data01/company_announcement_pdf/json/'
 
 def get_announcement_info(year):
     query_str = "select * from cninfo_companyreport where publishtime>='{}-01-01' and publishtime<='{}-01-01';"
@@ -26,7 +26,7 @@ def fill_json(announcement):
     print(publishtime)
     print(title)
     print(meta['secName'])
-    file_name = '{}{}'.format(
+    file_name = '{}_{}'.format(
                     companycode,
                     title
                 )
