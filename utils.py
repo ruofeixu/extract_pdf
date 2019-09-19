@@ -51,4 +51,25 @@ def upload_announcement_to_es(data):
             print(data)
             time.sleep(5)
     return response
-    
+
+def upload_regulation_announcement_to_es(data):
+    headers = {
+                "Content-Type": "application/json",
+                "Accept": "application/json",
+            }
+    base_url = config['es_url']
+    url = base_url + '/api/regulation_announcement/save'
+    print(url)
+    s = requests.Session()
+    s.mount(base_url, HTTPAdapter(max_retries=10))
+    while True:
+        try:
+            response = s.post(headers=headers, url=url, timeout=10, json=data)
+            print(response.content)
+            break
+        except:
+            traceback.print_exc()
+            print(data)
+            time.sleep(5)
+    return response
+ 
